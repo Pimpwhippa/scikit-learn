@@ -15,6 +15,7 @@ from ._split import StratifiedShuffleSplit
 from ._split import PredefinedSplit
 from ._split import train_test_split
 from ._split import check_cv
+from ._split import GroupTimeSeriesSplit
 
 from ._validation import cross_val_score
 from ._validation import cross_val_predict
