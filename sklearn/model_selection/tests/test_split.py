@@ -1594,8 +1594,8 @@ def test_random_state_shuffle_false(Klass):
     with pytest.warns(FutureWarning,
                       match='has no effect since shuffle is False'):
         Klass(3, shuffle=False, random_state=0)
-        
-        
+
+
 def test_group_time_series_fail_groups_are_none():
     """
     The GroupTimeSeriesSplit with no group should work exactlhy as a
