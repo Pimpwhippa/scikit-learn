@@ -2184,42 +2184,43 @@ def _build_repr(self):
 
 
 class GroupTimeSeriesSplit(TimeSeriesSplit):
+    def __init__(self, n_splits=5, max_train_size=None):
+        super().__init__(n_splits)
+        self.max_train_size = max_train_size
 
-
-	def __init__(self, n_splits=5, max_train_size=None):
-  	 	 super().__init__(n_splits, shuffle=False, random_state=None)
-   		 self.max_train_size = max_train_size
-    
-    
-	def split(self, X, y=None, groups=None):
-
-		X, y, groups = indexable(X, y, groups)
-		n_samples = _num_samples(X)
-		n_splits = self.n_splits
-		n_folds = n_splits + 1
-		if n_folds > n_samples:
-			raise ValueError(
-			("Cannot have number of folds ={0} greater"
-			" than the number of samples: {1}.").format(n_folds,n_samples))
-		unique_groups = np.unique(groups)
-		groups_dict = {key: [] for key in unique_groups}
-		indices = np.arange(n_samples)
-		for i  in indices:
-			temp = groups_dict.get(groups[i])
-			temp.append(i)
-			groups_dict[groups[i]] = temp
-		group_combinations = combinations(unique_groups, 2)
-		for group_keys in list(group_combinations): 
-			index_list1 = groups_dict.get(group_keys[0])
-			index_list2 = groups_dict.get(group_keys[1])
-			sample_len = min(len(index_list1) ,len(index_list2)) 
-			test_size = (sample_len // n_folds)
-			test_starts = range(test_size + n_samples % n_folds,
-				n_samples, test_size)
-			for test_start in test_starts:
-				if self.max_train_size and self.max_train_size < test_start:
-					yield (indices[test_start - self.max_train_size:test_start],
-						indices[test_start:test_start + test_size])
-				else:
-					yield (indices[:test_start],
-						indices[test_start:test_start + test_size])
+    def split(self, X, y=None, groups=None):
+        X, y, groups = indexable(X, y, groups)
+        n_samples = _num_samples(X)
+        n_splits = self.n_splits
+        n_folds = n_splits + 1
+        indices = np.arange(n_samples)
+        if n_folds > n_samples:
+            raise ValueError(
+             ("Cannot have number of folds ={0} greater"
+              " than the number of samples: {1}.").format(n_folds, n_samples))
+        else:
+            test_size = (n_samples // n_folds)
+        test_starts = range(test_size + n_samples % n_folds, n_samples,
+                            test_size)
+        for test_start in test_starts:
+            if self.max_train_size and self.max_train_size < test_start:
+                train_array = indices[test_start -
+                                      self.max_train_size:test_start]
+                test_array = indices[test_start:test_start + test_size]
+                train_group = [groups[i] for i in train_array]
+                for i in test_array:
+                    if groups[i] in train_group:
+                        test_array = test_array[test_array != i]
+                if test_array.size <= 1:
+                    continue
+                yield(train_array, test_array)
+            else:
+                train_array = indices[:test_start]
+                test_array = indices[test_start:test_start + test_size]
+                train_group = [groups[i] for i in train_array]
+                for i in test_array:
+                    if groups[i] in train_group:
+                        test_array = test_array[test_array != i]
+                if test_array.size <= 1:
+                    continue
+                yield(train_array, test_array)
