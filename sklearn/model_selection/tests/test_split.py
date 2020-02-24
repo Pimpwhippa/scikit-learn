@@ -1584,6 +1584,6 @@ def test_group_time_series_more_splits_than_group():
     groups = np.array([1, 1, 1, 2, 2])
     X = y = np.ones(len(groups))
     assert_raises_regexp(ValueError, "Cannot have number of splits greater"
-                        " than the number of groups",
+                                     " than the number of groups",
                          next,
                          GroupTimeSeriesSplit(n_splits=3).split(X, y, groups))
