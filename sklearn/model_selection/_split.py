@@ -2189,10 +2189,19 @@ class GroupTimeSeriesSplit(TimeSeriesSplit):
         self.max_train_size = max_train_size
 
     def split(self, X, y=None, groups=None):
+        if groups is None:
+            raise ValueError(
+                "The 'groups' parameter should not be None")
         X, y, groups = indexable(X, y, groups)
         n_samples = _num_samples(X)
         n_splits = self.n_splits
         n_folds = n_splits + 1
+        print(n_folds, _num_samples(np.unique(groups)))
+        if n_folds > len(np.unique(groups)):
+            raise ValueError(
+                ("Cannot have number of splits greater than"
+                 " the number of groups").format(n_folds,
+                                                 len(np.unique(groups))))
         indices = np.arange(n_samples)
         if n_folds > n_samples:
             raise ValueError(
