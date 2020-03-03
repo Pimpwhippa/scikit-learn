@@ -1591,7 +1591,8 @@ def test_group_time_series_max_train_size():
     groups = np.array(unique_groups * 4)
     n_samples = len(groups)
     X = y = np.ones(n_samples)
-    splits = GroupTimeSeriesSplit(n_splits=3).split(X, y, groups)
+    splits = GroupTimeSeriesSplit(n_splits=3,
+                                  max_train_size=3).split(X, y, groups)
     check_splits = GroupTimeSeriesSplit(n_splits=3,
                                         max_train_size=3).split(X, y, groups)
     _check_time_series_max_train_size(splits, check_splits, max_train_size=3)

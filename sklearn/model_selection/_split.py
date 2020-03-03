@@ -2196,7 +2196,6 @@ class GroupTimeSeriesSplit(TimeSeriesSplit):
         n_samples = _num_samples(X)
         n_splits = self.n_splits
         n_folds = n_splits + 1
-        print(n_folds, _num_samples(np.unique(groups)))
         if n_folds > len(np.unique(groups)):
             raise ValueError(
                 ("Cannot have number of splits greater than"
