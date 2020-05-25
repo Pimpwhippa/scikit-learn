@@ -2179,16 +2179,92 @@ def _build_repr(self):
         finally:
             warnings.filters.pop(0)
         params[key] = value
-
     return '%s(%s)' % (class_name, _pprint(params, offset=len(class_name)))
 
 
 class GroupTimeSeriesSplit(TimeSeriesSplit):
+    """Grouped Time Series cross-validator
+
+    Provides train/test indices to split time series data samples
+    that are observed at fixed time intervals according to a
+    third-party provided group.
+    In each split, test indices must be higher than before, and thus shuffling
+    in cross validator is inappropriate.
+
+    This cross-validation object is a variation of :class:`KFold`.
+    In the kth split, it returns first k folds as train set and the
+    (k+1)th fold as test set.
+
+    The same group will not appear in two different folds (the number of
+    distinct groups has to be at least equal to the number of folds).
+
+    Note that unlike standard cross-validation methods, successive
+    training sets are supersets of those that come before them.
+
+    Read more in the :ref:`User Guide <cross_validation>`.
+
+    Parameters
+    ----------
+    n_splits : int, default=5
+        Number of splits. Must be at least 2.
+
+    max_train_size : int, default=None
+        Maximum size for a single training set.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from sklearn.model_selection import GroupTimeSeriesSplit
+    >>> groups = ['a' ,'b' ,'c' ,'a','b' ,'f' ,'g' ,'d' ,'f']
+    >>> n_samples = len(groups)
+    >>> X = y = np.ones(n_samples)
+    >>> gtscv = GroupTimeSeriesSplit(n_splits=2)
+    >>> for train_index, test_index in gtscv.split(X, y, groups):
+    ...     print("TRAIN:", train_index, "TEST:", test_index)
+    ...
+    TRAIN: [0 1 2 3 4 5] TEST: [6 7]
+
+    >>> import numpy as np
+    >>> from sklearn.model_selection import GroupTimeSeriesSplit
+    >>> unique_groups = ['Miguel', 'Oriana', 'Lilia', 'Juanito']
+    >>> groups = np.array(unique_groups * 4)
+    >>> n_samples = len(groups)
+    >>> X = y = np.ones(n_samples)
+    >>> gtscv = GroupTimeSeriesSplit(n_splits=2,max_train_size=3)
+    >>> for train_index, test_index in gtscv.split(X, y, groups):
+    ...     print("TRAIN:", train_index, "TEST:", test_index)
+    ...
+    TRAIN: [3 4 5] TEST: [ 6 10]
+    TRAIN: [ 8  9 10] TEST: [11 15]
+    """
     def __init__(self, n_splits=5, max_train_size=None):
         super().__init__(n_splits)
         self.max_train_size = max_train_size
 
     def split(self, X, y=None, groups=None):
+        """Generate indices to split data into training and test set.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Training data, where n_samples is the number of samples
+            and n_features is the number of features.
+
+        y : array-like of shape (n_samples,)
+            Always ignored, exists for compatibility.
+
+        groups : array-like of shape (n_samples,)
+            Group labels for the samples used while splitting the dataset into
+            train/test set.
+
+        Yields
+        ------
+        train : ndarray
+            The training set indices for that split.
+
+        test : ndarray
+            The testing set indices for that split.
+        """
         if groups is None:
             raise ValueError(
                 "The 'groups' parameter should not be None")

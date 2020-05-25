@@ -1532,12 +1532,11 @@ def test_random_state_shuffle_false(Klass):
 
 def test_group_time_series_fail_groups_are_none():
     """
-    The GroupTimeSeriesSplit with no group should work exactlhy as a
-    TimeSeriesSplit
+    The GroupTimeSeriesSplit with no group should raise an Error
     """
     X = [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12], [13, 14]]
 
-    # Should fail if there groups is note
+    # Should fail if the 'groups' is None
     assert_raises_regexp(ValueError,
                          "The 'groups' parameter should not be None",
                          next,
