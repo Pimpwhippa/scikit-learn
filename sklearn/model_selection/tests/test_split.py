@@ -1575,12 +1575,12 @@ def test_group_time_series_ordering_and_group_preserved():
             assert (e < time_stamps[test]).all()
 
 
-def test_group_time_series_more_splits_than_group():
+def test_group_time_series_more_folds_than_group():
     # Should fail if there are more folds than groups
     groups = np.array([1, 1, 1, 2, 2])
     X = y = np.ones(len(groups))
-    assert_raises_regexp(ValueError, "Cannot have number of splits greater"
-                                     " than the number of groups",
+    assert_raises_regexp(ValueError, "Cannot have number of folds=4 greater"
+                                     " than the number of groups=2",
                          next,
                          GroupTimeSeriesSplit(n_splits=3).split(X, y, groups))
 
