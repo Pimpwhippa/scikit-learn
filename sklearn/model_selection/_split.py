@@ -2274,9 +2274,9 @@ class GroupTimeSeriesSplit(TimeSeriesSplit):
         n_folds = n_splits + 1
         if n_folds > len(np.unique(groups)):
             raise ValueError(
-                ('Cannot have number of splits greater than'
-                 ' the number of groups').format(n_folds,
-                                                 len(np.unique(groups))))
+                ("Cannot have number of folds={0} greater than"
+                 " the number of groups={1}").format(n_folds,
+                                                     len(np.unique(groups))))
         indices = np.arange(n_samples)
         if n_folds > n_samples:
             raise ValueError(
