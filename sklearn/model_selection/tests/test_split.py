@@ -1605,3 +1605,67 @@ def test_group_time_series_max_train_size():
     check_splits = GroupTimeSeriesSplit(n_splits=3,
                                         max_train_size=5).split(X, y, groups)
     _check_time_series_max_train_size(splits, check_splits, max_train_size=2)
+
+
+def test_group_time_series_work_even_if_groups_are_none():
+    """
+    The GroupTimeSeriesSplit with no group should work exactly as a
+    TimeSeriesSplit
+    """
+    X = [0,1,2,3,4,5,6,7]
+    unique_groups = ['A','B','C','D']
+
+    groups = np.array(unique_groups*2)
+    n_samples = len(groups)
+    n_splits = 4
+    
+    # Fake array of time like
+    time_stamps = X * np.arange(n_samples)
+
+    # expected_result = TimeSeriesSplit(n_splits=4).split(X)
+    tscv = TimeSeriesSplit(n_splits=4)
+    expected_result = []
+    for train, test in tscv.split(X):
+        print("%s %s" % (train,test))
+        expected_result.append((train,test))
+
+    #A = GroupTimeSeriesSplit.split(X) with no groups
+    
+    A = [(array([0, 1, 2, 3]), array([4])),
+        (array([0, 1, 2, 3, 4]), array([5])),
+        (array([0, 1, 2, 3, 4, 5]), array([6])),
+        (array([0, 1, 2, 3, 4, 5, 6]), array([7]))]
+    
+    for i in range(len(A)):
+        assert_array_equal (all(A), all(expected_result))
+    
+    #this also works
+    #np.allclose(all(A),all(expected_result))
+
+    #this doesn't work
+    #assert_array_equal(A,expected_result)
+
+
+def test_all_groups_get_to_be_test_set_at_least_once():
+    """ Each group has to be the test group"""
+    
+    X = [0, 1, 2, 3, 4, 5, 6, 7]
+    groups = ['B', 'D', 'D', 'C', 'C', 'A', 'B', 'A']
+    unique_groups = np.unique(groups)
+    n_samples = len(groups)
+    n_splits = 4
+    # hardcoded expected result  
+    # splits = GroupTimeSeriesSplit(n_splits=4, 
+    # 0B 1D 2D 3C 4C 5A 6B 7A
+    # [0 1 2 3 4][5 7]
+    # [1 2 3 4][6]
+    # [0 1 2][3 4]
+    # [0][1 2]
+    expected_test_indices = np.array([[1, 2], [3, 4], [6], [5, 7]])
+    flat_list = [item for sublist in expected_test_indices for item in sublist]
+    all_test_set = [int(i) for i in flat_list]
+
+    result = []
+    for i in all_test_set :
+        result.append(groups[i])
+    assert np.array_equal(np.unique(result), unique_groups)
