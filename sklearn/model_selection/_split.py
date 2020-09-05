@@ -2295,8 +2295,6 @@ class GroupTimeSeriesSplit(TimeSeriesSplit):
                 for i in test_array:
                     if groups[i] in train_group:
                         test_array = test_array[test_array != i]
-                if test_array.size <= 1:
-                    continue
                 yield(train_array, test_array)
             else:
                 train_array = indices[:test_start]
@@ -2305,6 +2303,4 @@ class GroupTimeSeriesSplit(TimeSeriesSplit):
                 for i in test_array:
                     if groups[i] in train_group:
                         test_array = test_array[test_array != i]
-                if test_array.size <= 1:
-                    continue
                 yield(train_array, test_array)
