@@ -20,6 +20,8 @@ from inspect import signature
 import numpy as np
 from scipy.special import comb
 
+print('blabla')
+
 from ..utils import indexable, check_random_state, _safe_indexing
 from ..utils import _approximate_mode
 from ..utils.validation import _num_samples, column_or_1d
@@ -2273,7 +2275,7 @@ class GroupTimeSeriesSplit(TimeSeriesSplit):
         super().__init__(n_splits)
         self.max_train_size = max_train_size
 
-    def split(self, X, y=None, groups=None):
+    def split(self, X, y=None, groups=groups):
         """Generate indices to split data into training and test set.
         Parameters
         ----------
@@ -2291,9 +2293,9 @@ class GroupTimeSeriesSplit(TimeSeriesSplit):
             The training set indices for that split.
         test : ndarray
             The testing set indices for that split"""
-        if groups is None:
-            raise ValueError(
-                "The 'groups' parameter should not be None")
+        #if groups is None:
+            #raise ValueError(
+               #"The 'groups' parameter should not be None")
         X, y, groups = indexable(X, y, groups)
         n_samples = _num_samples(X)
         n_splits = self.n_splits
@@ -2304,72 +2306,61 @@ class GroupTimeSeriesSplit(TimeSeriesSplit):
                  " the number of groups={1}").format(n_folds,
                                                      len(np.unique(groups))))
         indices = np.arange(n_samples)
+        
         if n_folds > n_samples:
             raise ValueError(
              ("Cannot have number of folds ={0} greater"
               " than the number of samples: {1}.").format(n_folds, n_samples))
         else:
             train_size = n_samples // n_folds
-            
-            if train_size > max_train_size:
-                train_size = max_train_size
-
-            #groups = np.array(['a', 'a', 'a', 'a', 'a', 'a', 'b', 'b', 'b', 'b', 'b', 'c', 'c', 'c', 'c', 'd', 'd', 'd'])
-            groups = np.array(['b', 'a', 'c', 'b', 'd', 'd', 'b', 'c', 'a', 'a', 'c', 'd', 'c', 'b', 'd', 'a'])
-
-            n_samples = len(groups)
-            n_folds = 3
-            train_size = n_samples // n_folds
-            indices = np.arange(n_samples)
-            test_start = indices[train_size]
-
-            def myRange(test_start,n_samples,train_size):
-                i = test_start
+            start = indices[train_size]
+        
+            def myRange(start,n_samples,train_size):
+                i = start
                 while i < n_samples:
                     yield i
                     i += train_size
                 yield n_samples-1
+        
+            test_starts = myRange(start,n_samples,train_size)
 
         test_arrays = []
-        train_prelims = []
+        train_prelims = [] 
 
-        for test_start in myRange(test_start,n_samples,train_size):
-            count = 1
-            #look backwards             
-            if groups[test_start-1] != groups[test_start]:
-                print ("test start stays at {}".format(test_start))
+        for test_start in test_starts:
+            #look backwards
+            if groups[test_start] != groups[test_start-1]:
+                test_arrays.append(test_start)
+                print("original test_start is counted in")
             else:
-                while True:
-                    groups[test_start] == groups[test_start-1]
+                while groups[test_start] == groups[test_start-1]:
+                    test_arrays.append(test_start-1)
                     test_start -= 1
-                    if groups[test_start-1] != groups[test_start]:
-                        print ("test_start goes backwards to be at {}".format(test_start))
-                    break
-            
-#if test_start is the last index, skip the below block
-            if test_start == indices[-1]:
-                print("test_start is the last sample")
-            else:
-                #look forward
-                if groups[test_start+1] != groups[test_start]:
-                    print ("test start is at {}".format(test_start))
-                else:
-                    while True:
-                        groups[test_start+count] == groups[test_start]
-                        count +=1
-                        if groups[test_start+count] != groups[test_start]:
-                            print("test array goes until {} but exclude".format(indices[test_start+count]))
-                        break
+                    print ("test_start goes backwards to be at {}".format(test_start))
     
-            test_array = indices[test_start:test_start+count]
+            #look forward
+            i = 0
+            for current,forward in zip(groups[test_start:], groups[test_start+1:]):
+                i += 1
+        
+                if current != forward:
+                    print("test array goes up {} times from test_start".format(i))
+                    break
+        
+        #if it's the last index includes it
+                if test_start == indices[-1]:
+                    test_arrays.append(test_start)
+            
+            test_array = indices[test_start:test_start+i]
             test_arrays.append(test_array)
 
             train_prelim = indices[:test_start]
             train_prelims.append(train_prelim)
-            
+
             #train_intermediate[:max_train_size]
 
-            got_test_group = np.isin(groups[train_prelim], groups[test_array])
-            train_array = np.where(got_test_group == False)[0]
-    
-            yield(train_array, test_array)
+            #got_test_group = np.isin(groups[train_prelim], groups[test_array])
+            #train_array = np.where(got_test_group == False)[0]
+            #yield(train_array, test_array)
+
+            yield (train_prelim, test_array)
