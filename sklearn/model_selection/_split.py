@@ -30,6 +30,7 @@ from ..utils.validation import _deprecate_positional_args
 from ..utils.multiclass import type_of_target
 from ..base import _pprint
 
+
 __all__ = ['BaseCrossValidator',
            'KFold',
            'GroupKFold',
@@ -2275,7 +2276,7 @@ class GroupTimeSeriesSplit(TimeSeriesSplit):
         super().__init__(n_splits)
         self.max_train_size = max_train_size
 
-    def split(self, X, y=None, groups=groups):
+    def split(self, X, y=None, groups=None):
         """Generate indices to split data into training and test set.
         Parameters
         ----------
@@ -2359,8 +2360,8 @@ class GroupTimeSeriesSplit(TimeSeriesSplit):
 
             #train_intermediate[:max_train_size]
 
-            #got_test_group = np.isin(groups[train_prelim], groups[test_array])
-            #train_array = np.where(got_test_group == False)[0]
-            #yield(train_array, test_array)
+            got_test_group = np.isin(groups[train_prelim], groups[test_array])
+            train_array = np.where(got_test_group == False)[0]
+            yield(train_array, test_array)
 
-            yield (train_prelim, test_array)
+            #yield (train_prelim, test_array)
